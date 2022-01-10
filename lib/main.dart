@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:phone_auth_firebase/screens/home_screen.dart';
-import 'package:phone_auth_firebase/screens/login_screen.dart';
+import 'package:phone_auth_firebase/screens/firebase_login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 ///Example from ==> https://www.youtube.com/watch?v=W19IfZ-nqB8&ab_channel=EasyApproach
@@ -55,7 +55,7 @@ class _InitializerWidgetState extends State<InitializerWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: isLoading ? const Center(child: CircularProgressIndicator(),) :
-      _user == null ? const LoginScreen() : const HomeScreen(),
+      _user == null ? const FirebaseLoginScreen() : const HomeScreen(),
     );
   }
 }

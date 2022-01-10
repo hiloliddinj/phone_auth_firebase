@@ -1,20 +1,22 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:phone_auth_firebase/screens/home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'home_screen.dart';
 
 enum MobileVerificationState {
   showMobilePhoneState,
   showOtpFormState,
 }
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class FirebaseLoginScreen extends StatefulWidget {
+  const FirebaseLoginScreen({Key? key}) : super(key: key);
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _FirebaseLoginScreenState createState() => _FirebaseLoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
+
   var currentState = MobileVerificationState.showMobilePhoneState;
 
   final phoneController = TextEditingController();
@@ -26,35 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String verificationId = '';
 
-  signInWithPhoneAuthCredential(PhoneAuthCredential phoneAuthCredential) async {
-
-    setState(() {
-      showLoading = true;
-    });
-
-    try {
-      final authCredential = await _auth.signInWithCredential(phoneAuthCredential);
-
-      setState(() {
-        showLoading = false;
-      });
-
-      if (authCredential.user != null) {
-        print('Tenant ID: ${_auth.currentUser?.uid}');
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
-      }
-
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        showLoading = false;
-      });
-      _scaffoldKey.currentState?.showSnackBar(SnackBar(content: Text(e.message ?? 'e.message is null!')));
-    }
-  }
-
   Widget getMobileFormWidget(context) {
     return Column(
-       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         //const Spacer(),
         TextField(
@@ -81,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   showLoading = false;
                 });
                 _scaffoldKey.currentState?.showSnackBar(
-                  SnackBar(content: Text(verificationFailed.message ?? 'verificationFailed message is Null'))
+                    SnackBar(content: Text(verificationFailed.message ?? 'verificationFailed message is Null'))
                 );
               },
               codeSent: (verificationId, resendingToken) async {
@@ -125,16 +101,16 @@ class _LoginScreenState extends State<LoginScreen> {
         TextButton(
           onPressed: () async {
             PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(
-                verificationId: verificationId,
-                smsCode: otpController.text,
+              verificationId: verificationId,
+              smsCode: otpController.text,
             );
 
             signInWithPhoneAuthCredential(phoneAuthCredential);
           },
           child: const Text('Verify', style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue
           ),),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.all(16.0),
@@ -146,17 +122,59 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  signInWithPhoneAuthCredential(PhoneAuthCredential phoneAuthCredential) async {
+
+    setState(() {
+      showLoading = true;
+    });
+
+    try {
+      final authCredential = await _auth.signInWithCredential(phoneAuthCredential);
+
+      setState(() {
+        showLoading = false;
+      });
+
+      if (authCredential.user != null) {
+        print('Tenant ID: ${_auth.currentUser?.uid}');
+        //TODO: After successful login go to second home page
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+      }
+
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        showLoading = false;
+      });
+      _scaffoldKey.currentState?.showSnackBar(SnackBar(content: Text(e.message ?? 'e.message is null!')));
+    }
+  }
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      body: Container(
-        child: showLoading ? const Center(child: CircularProgressIndicator(),) : (currentState == MobileVerificationState.showMobilePhoneState)
-            ? getMobileFormWidget(context)
-            : getOtpFormWidget(context),
-        padding: const EdgeInsets.all(25),
+      backgroundColor: Colors.black,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Image(image: AssetImage('assets/login_logo.jpg')),
+          Container(
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+                color: Colors.white,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                child: showLoading ? const Center(child: CircularProgressIndicator())
+                    : (currentState == MobileVerificationState.showMobilePhoneState)
+                    ? getMobileFormWidget(context)
+                    : getOtpFormWidget(context),
+              )
+          ),
+        ],
       ),
     );
   }
