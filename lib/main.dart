@@ -56,6 +56,7 @@ class _InitializerWidgetState extends State<InitializerWidget> {
     return Scaffold(
       body: isLoading ? const Center(child: CircularProgressIndicator(),) :
       _user == null ? const FirebaseLoginScreen() : const HomeScreen(),
+      //body: FirebaseLoginScreen(),
     );
   }
 }

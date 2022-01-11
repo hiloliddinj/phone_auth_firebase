@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   firebase_auth: ^3.3.5
   firebase_core: ^1.11.0
+  numeric_keyboard: ^1.1.0
 
 dev_dependencies:
   flutter_test:

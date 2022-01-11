@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:numeric_keyboard/numeric_keyboard.dart';
 
 import 'home_screen.dart';
 
@@ -16,7 +18,6 @@ class FirebaseLoginScreen extends StatefulWidget {
 }
 
 class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
-
   var currentState = MobileVerificationState.showMobilePhoneState;
 
   final phoneController = TextEditingController();
@@ -28,108 +29,313 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
 
   String verificationId = '';
 
+  String otpText = '';
+
   Widget getMobileFormWidget(context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        //const Spacer(),
-        TextField(
-          controller: phoneController,
-          decoration: const InputDecoration(
-            hintText: 'Phone Number',
-          ),
+    return Container(
+      margin: const EdgeInsets.only(left: 40, right: 40),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(40)),
+        color: Colors.white,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: phoneController,
+              textInputAction: TextInputAction.send,
+              maxLines: 1,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                icon: const Icon(
+                  Icons.phone,
+                  color: Colors.black,
+                  size: 25,
+                ),
+                hintText: 'Phone Number',
+              ),
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: 200,
+              child: ElevatedButton(
+                onPressed: () async {
+                  setState(() {
+                    showLoading = true;
+                  });
+                  await _auth.verifyPhoneNumber(
+                    phoneNumber: phoneController.text,
+                    verificationCompleted: (phoneAuthCredential) async {
+                      setState(() {
+                        showLoading = false;
+                      });
+                      //signInWithPhoneAuthCredential(phoneAuthCredential);
+                    },
+                    verificationFailed: (verificationFailed) async {
+                      setState(() {
+                        showLoading = false;
+                      });
+                      _scaffoldKey.currentState?.showSnackBar(SnackBar(
+                          content: Text(verificationFailed.message ??
+                              'verificationFailed message is Null')));
+                    },
+                    codeSent: (verificationId, resendingToken) async {
+                      setState(() {
+                        showLoading = false;
+                        currentState = MobileVerificationState.showOtpFormState;
+                        this.verificationId = verificationId;
+                      });
+                    },
+                    codeAutoRetrievalTimeout: (verificationId) async {},
+                  );
+                },
+                child: const Text(
+                  'SEND',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+                style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.black),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18.0),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        TextButton(
-          onPressed: () async {
-            setState(() {
-              showLoading = true;
-            });
-            await _auth.verifyPhoneNumber(
-              phoneNumber: phoneController.text,
-              verificationCompleted: (phoneAuthCredential) async {
-                setState(() {
-                  showLoading = false;
-                });
-                //signInWithPhoneAuthCredential(phoneAuthCredential);
-              },
-              verificationFailed: (verificationFailed) async {
-                setState(() {
-                  showLoading = false;
-                });
-                _scaffoldKey.currentState?.showSnackBar(
-                    SnackBar(content: Text(verificationFailed.message ?? 'verificationFailed message is Null'))
-                );
-              },
-              codeSent: (verificationId, resendingToken) async {
-                setState(() {
-                  showLoading = false;
-                  currentState = MobileVerificationState.showOtpFormState;
-                  this.verificationId = verificationId;
-                });
-              },
-              codeAutoRetrievalTimeout: (verificationId) async {
+      ),
+    );
+  }
 
-              },
-            );
-          },
-          child: const Text('SEND', style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue
-          ),),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.all(16.0),
-            primary: Colors.white,
-            textStyle: const TextStyle(fontSize: 20),
-          ),
+  String eachNumber(index) {
+    if (otpText.isEmpty) {
+      return '';
+    } else {
+      if (otpText.length >= index + 1) {
+        return otpText[index];
+      }
+      return '';
+    }
+  }
+
+  Widget otpNumberWidget(int position) {
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.white, width: 0),
+          borderRadius: const BorderRadius.all(Radius.circular(8))),
+      child: Center(
+          child: Text(
+        eachNumber(position),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
         ),
+      )),
+    );
+  }
+
+  void _onKeyboardTap(String value) {
+    setState(() {
+      otpText = otpText + value;
+    });
+  }
+
+  verificationCodeSentToFirebase() async {
+    PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: otpText,
+    );
+    signInWithPhoneAuthCredential(phoneAuthCredential);
+  }
+
+  Widget getOtpFormWidget2(context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Column(
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const SizedBox(height: 30),
+                Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    child: const Text(
+                        'Enter 6 digits verification code sent to your number',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500))),
+                const SizedBox(height: 30),
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      otpNumberWidget(0),
+                      otpNumberWidget(1),
+                      otpNumberWidget(2),
+                      otpNumberWidget(3),
+                      otpNumberWidget(4),
+                      otpNumberWidget(5),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: RaisedButton(
+                onPressed: () async {
+                  await verificationCodeSentToFirebase();
+                },
+                color: Colors.grey,
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(14))),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      const Text(
+                        'Confirm',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          color: Colors.black,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            NumericKeyboard(
+              onKeyboardTap: _onKeyboardTap,
+              textColor: Colors.white,
+              rightButtonFn: () {
+                setState(() {
+                  otpText = otpText.substring(0, otpText.length - 1);
+                });
+              },
+              rightIcon: const Icon(
+                Icons.backspace,
+                color: Colors.white,
+                size: 25,
+              ),
+              leftButtonFn: () async {
+                await verificationCodeSentToFirebase();
+              },
+              leftIcon: const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 30,
+              ),
+            ),
+          ],
+        )
       ],
     );
   }
 
-  Widget getOtpFormWidget(context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        //const Spacer(),
-        TextField(
-          controller: otpController,
-          decoration: const InputDecoration(
-            hintText: 'ENTER OTP',
-          ),
-        ),
-        TextButton(
-          onPressed: () async {
-            PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(
-              verificationId: verificationId,
-              smsCode: otpController.text,
-            );
-
-            signInWithPhoneAuthCredential(phoneAuthCredential);
-          },
-          child: const Text('Verify', style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue
-          ),),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.all(16.0),
-            primary: Colors.white,
-            textStyle: const TextStyle(fontSize: 20),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget getOtpFormWidget(context) {
+  //   return Column(
+  //     mainAxisAlignment: MainAxisAlignment.center,
+  //     children: [
+  //       TextField(
+  //         controller: otpController,
+  //         textInputAction: TextInputAction.go,
+  //         maxLines: 1,
+  //         decoration: InputDecoration(
+  //           border: OutlineInputBorder(
+  //             borderRadius: BorderRadius.circular(30.0),
+  //           ),
+  //           focusedBorder: OutlineInputBorder(
+  //             borderSide: const BorderSide(color: Colors.black, width: 2.0),
+  //             borderRadius: BorderRadius.circular(30.0),
+  //           ),
+  //           icon: const Icon(
+  //             Icons.sms_outlined,
+  //             color: Colors.black,
+  //             size: 25,
+  //           ),
+  //           hintText: 'SMS Code...',
+  //         ),
+  //       ),
+  //       const SizedBox(height: 30),
+  //       ElevatedButton(
+  //         onPressed: () async {
+  //           PhoneAuthCredential phoneAuthCredential =
+  //               PhoneAuthProvider.credential(
+  //             verificationId: verificationId,
+  //             smsCode: otpController.text,
+  //           );
+  //
+  //           signInWithPhoneAuthCredential(phoneAuthCredential);
+  //         },
+  //         child: const Text(
+  //           'Verify',
+  //           style: TextStyle(
+  //               fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+  //         ),
+  //         style: ButtonStyle(
+  //           backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
+  //           shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+  //             RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(18.0),
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   signInWithPhoneAuthCredential(PhoneAuthCredential phoneAuthCredential) async {
-
     setState(() {
       showLoading = true;
     });
 
     try {
-      final authCredential = await _auth.signInWithCredential(phoneAuthCredential);
+      final authCredential =
+          await _auth.signInWithCredential(phoneAuthCredential);
 
       setState(() {
         showLoading = false;
@@ -138,14 +344,15 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
       if (authCredential.user != null) {
         print('Tenant ID: ${_auth.currentUser?.uid}');
         //TODO: After successful login go to second home page
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()));
       }
-
     } on FirebaseAuthException catch (e) {
       setState(() {
         showLoading = false;
       });
-      _scaffoldKey.currentState?.showSnackBar(SnackBar(content: Text(e.message ?? 'e.message is null!')));
+      _scaffoldKey.currentState?.showSnackBar(
+          SnackBar(content: Text(e.message ?? 'e.message is null!')));
     }
   }
 
@@ -156,25 +363,21 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.black,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Image(image: AssetImage('assets/login_logo.jpg')),
-          Container(
-              padding: const EdgeInsets.only(left: 30, right: 30),
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-                color: Colors.white,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                child: showLoading ? const Center(child: CircularProgressIndicator())
-                    : (currentState == MobileVerificationState.showMobilePhoneState)
+      body: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Padding(
+                padding: EdgeInsets.only(left: 40, right: 40),
+                child: Image(image: AssetImage('assets/login_logo.jpg'))),
+            showLoading
+                ? const Center(child: CupertinoActivityIndicator(radius: 20))
+                : (currentState == MobileVerificationState.showMobilePhoneState)
                     ? getMobileFormWidget(context)
-                    : getOtpFormWidget(context),
-              )
-          ),
-        ],
+                    : getOtpFormWidget2(context),
+            //getOtpFormWidget2(context),
+          ],
+        ),
       ),
     );
   }
