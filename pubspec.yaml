@@ -37,6 +37,7 @@ dependencies:
   firebase_auth: ^3.3.5
   firebase_core: ^1.11.0
   numeric_keyboard: ^1.1.0
+  intl_phone_number_input: ^0.7.0+2
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:numeric_keyboard/numeric_keyboard.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 import 'home_screen.dart';
 
@@ -11,13 +12,19 @@ enum MobileVerificationState {
 }
 
 class FirebaseLoginScreen extends StatefulWidget {
-  const FirebaseLoginScreen({Key? key}) : super(key: key);
+
+  const FirebaseLoginScreen({Key? key
+  }) : super(key: key);
 
   @override
   _FirebaseLoginScreenState createState() => _FirebaseLoginScreenState();
 }
 
 class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
+
+  String initialCountry = 'CA';
+  PhoneNumber number = PhoneNumber(isoCode: 'CA');
+
   var currentState = MobileVerificationState.showMobilePhoneState;
 
   final phoneController = TextEditingController();
@@ -30,10 +37,14 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
   String verificationId = '';
 
   String otpText = '';
+  String updatedPhoneNumber = '';
+
+  bool phoneNumberIsValidated = false;
+  bool isSmsCodeIsSixDigits = false;
 
   Widget getMobileFormWidget(context) {
     return Container(
-      margin: const EdgeInsets.only(left: 40, right: 40),
+      margin: const EdgeInsets.only(left: 20, right: 20),
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(40)),
         color: Colors.white,
@@ -43,36 +54,115 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: phoneController,
-              textInputAction: TextInputAction.send,
-              maxLines: 1,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                icon: const Icon(
-                  Icons.phone,
-                  color: Colors.black,
-                  size: 25,
-                ),
-                hintText: 'Phone Number',
+            // TextField(
+            //   controller: phoneController,
+            //   textInputAction: TextInputAction.send,
+            //   maxLines: 1,
+            //   decoration: InputDecoration(
+            //     border: OutlineInputBorder(
+            //       borderRadius: BorderRadius.circular(30.0),
+            //     ),
+            //     focusedBorder: OutlineInputBorder(
+            //       borderSide: const BorderSide(color: Colors.black, width: 2.0),
+            //       borderRadius: BorderRadius.circular(30.0),
+            //     ),
+            //     icon: const Icon(
+            //       Icons.phone,
+            //       color: Colors.black,
+            //       size: 25,
+            //     ),
+            //     hintText: 'Phone Number',
+            //   ),
+            // ),
+            InternationalPhoneNumberInput(
+              onInputChanged: (PhoneNumber number) {
+                print(number.phoneNumber);
+                updatedPhoneNumber = '${number.phoneNumber}';
+              },
+              onInputValidated: (bool value) {
+                setState(() {
+                  phoneNumberIsValidated = value;
+                });
+              },
+              selectorConfig: const SelectorConfig(
+                selectorType: PhoneInputSelectorType.DIALOG,
               ),
+              spaceBetweenSelectorAndTextField: 0,
+              ignoreBlank: false,
+              autoValidateMode: AutovalidateMode.onUserInteraction,
+              selectorTextStyle: const TextStyle(color: Colors.black),
+              initialValue: number,
+              textFieldController: phoneController,
+              formatInput: true,
+              keyboardType:
+              const TextInputType.numberWithOptions(signed: true, decimal: true),
+              onSaved: null,
             ),
             const SizedBox(height: 30),
-            SizedBox(
-              width: 200,
-              child: ElevatedButton(
-                onPressed: () async {
+            // SizedBox(
+            //   width: 200,
+            //   child: ElevatedButton(
+            //     onPressed: () async {
+            //       setState(() {
+            //         showLoading = true;
+            //       });
+            //       await _auth.verifyPhoneNumber(
+            //         phoneNumber: updatedPhoneNumber,
+            //         verificationCompleted: (phoneAuthCredential) async {
+            //           setState(() {
+            //             showLoading = false;
+            //           });
+            //           //signInWithPhoneAuthCredential(phoneAuthCredential);
+            //         },
+            //         verificationFailed: (verificationFailed) async {
+            //           setState(() {
+            //             showLoading = false;
+            //           });
+            //           _scaffoldKey.currentState?.showSnackBar(SnackBar(
+            //               content: Text(verificationFailed.message ??
+            //                   'verificationFailed message is Null')));
+            //         },
+            //         codeSent: (verificationId, resendingToken) async {
+            //           setState(() {
+            //             showLoading = false;
+            //             currentState = MobileVerificationState.showOtpFormState;
+            //             this.verificationId = verificationId;
+            //           });
+            //         },
+            //         codeAutoRetrievalTimeout: (verificationId) async {},
+            //       );
+            //     },
+            //     child: const Text(
+            //       'Continue',
+            //       style: TextStyle(
+            //           fontSize: 20,
+            //           fontWeight: FontWeight.bold,
+            //           color: Colors.white),
+            //     ),
+            //     style: ButtonStyle(
+            //       backgroundColor:
+            //           MaterialStateProperty.all<Color>(Colors.black),
+            //       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            //         RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(18.0),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            OutlinedButton(
+              style: ButtonStyle(
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                          side: const BorderSide(color: Colors.red)))),
+              onPressed: () async {
+                if (phoneNumberIsValidated) {
                   setState(() {
                     showLoading = true;
                   });
                   await _auth.verifyPhoneNumber(
-                    phoneNumber: phoneController.text,
+                    phoneNumber: updatedPhoneNumber,
                     verificationCompleted: (phoneAuthCredential) async {
                       setState(() {
                         showLoading = false;
@@ -96,24 +186,13 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
                     },
                     codeAutoRetrievalTimeout: (verificationId) async {},
                   );
-                },
-                child: const Text(
-                  'SEND',
+                }
+              },
+              child: Text('Continue',
                   style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.black),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18.0),
-                    ),
-                  ),
-                ),
-              ),
+                    fontSize: 18,
+                    color: phoneNumberIsValidated ? const Color(0xFFFE2C55) : Colors.grey,
+                  )),
             ),
           ],
         ),
@@ -122,6 +201,15 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
   }
 
   String eachNumber(index) {
+    if (otpText.length == 6) {
+      setState(() {
+        isSmsCodeIsSixDigits = true;
+      });
+    } else {
+      setState(() {
+        isSmsCodeIsSixDigits = false;
+      });
+    }
     if (otpText.isEmpty) {
       return '';
     } else {
@@ -206,46 +294,22 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
               ],
             ),
             const SizedBox(height: 30),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              constraints: const BoxConstraints(maxWidth: 500),
-              child: RaisedButton(
-                onPressed: () async {
+            OutlinedButton(
+              style: ButtonStyle(
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                          side: const BorderSide(color: Colors.red)))),
+              onPressed: () async {
+                if (isSmsCodeIsSixDigits) {
                   await verificationCodeSentToFirebase();
-                },
-                color: Colors.grey,
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14))),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      const Text(
-                        'Confirm',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                          color: Colors.black,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
+                }
+              },
+              child: Text('Continue',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: isSmsCodeIsSixDigits ? const Color(0xFFFE2C55) : Colors.grey,
+                  )),
             ),
             NumericKeyboard(
               onKeyboardTap: _onKeyboardTap,
@@ -356,6 +420,11 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
   @override
@@ -371,7 +440,7 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
                 padding: EdgeInsets.only(left: 40, right: 40),
                 child: Image(image: AssetImage('assets/login_logo.jpg'))),
             showLoading
-                ? const Center(child: CupertinoActivityIndicator(radius: 20))
+                ? const Center(child: CupertinoActivityIndicator(radius: 25))
                 : (currentState == MobileVerificationState.showMobilePhoneState)
                     ? getMobileFormWidget(context)
                     : getOtpFormWidget2(context),
