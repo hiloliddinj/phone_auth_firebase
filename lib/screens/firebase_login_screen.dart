@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:numeric_keyboard/numeric_keyboard.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
-
 import 'home_screen.dart';
 
 enum MobileVerificationState {
@@ -325,11 +324,13 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
                 size: 25,
               ),
               leftButtonFn: () async {
-                await verificationCodeSentToFirebase();
+                if (isSmsCodeIsSixDigits) {
+                  await verificationCodeSentToFirebase();
+                }
               },
-              leftIcon: const Icon(
+              leftIcon: Icon(
                 Icons.check,
-                color: Colors.white,
+                color: isSmsCodeIsSixDigits ? const Color(0xFFFE2C55) : Colors.grey,
                 size: 30,
               ),
             ),
