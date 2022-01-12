@@ -224,7 +224,7 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
       height: 40,
       width: 40,
       decoration: BoxDecoration(
-          border: Border.all(color: Colors.white, width: 0),
+          border: Border.all(color: Colors.white, width: 0.5),
           borderRadius: const BorderRadius.all(Radius.circular(8))),
       child: Center(
           child: Text(
