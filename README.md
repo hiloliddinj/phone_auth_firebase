@@ -1,6 +1,7 @@
 # phone_auth_firebase
 
-A new Flutter project.
+FLutter Firebase Phone SMS authontication demo.
+
 
 ## Getting Started
 

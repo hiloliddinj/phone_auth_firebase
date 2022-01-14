@@ -439,7 +439,8 @@ class _FirebaseLoginScreenState extends State<FirebaseLoginScreen> {
           children: [
             const Padding(
                 padding: EdgeInsets.only(left: 40, right: 40),
-                child: Image(image: AssetImage('assets/login_logo.jpg'))),
+                child: Image(image: AssetImage('assets/flutter_logo.png'))),
+            const SizedBox(height: 20),
             showLoading
                 ? const Center(child: CupertinoActivityIndicator(radius: 25))
                 : (currentState == MobileVerificationState.showMobilePhoneState)
