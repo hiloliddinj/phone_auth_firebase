@@ -3,15 +3,7 @@
 FLutter Firebase Phone SMS authontication demo.
 
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![1](https://user-images.githubusercontent.com/38894285/149532415-f72e61bd-ef88-4269-9c87-ba660b947db1.png)
+![2](https://user-images.githubusercontent.com/38894285/149532455-fddcbe4b-82f4-408e-a7ee-979c42482c9b.png)
+![3](https://user-images.githubusercontent.com/38894285/149532474-0c494413-078d-4ae4-8d59-d350c2046acd.png)
